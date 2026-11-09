@@ -300,7 +300,7 @@ final class JITController {
             showsErrorDetails: false,
             titleText: NSLocalizedString("Failed to enable JIT", comment: ""),
             messageText: NSLocalizedString("The required Developer Disk Image files for enabling JIT were not found.\n\nJIT has been disabled. Quit the app using the button below, then re-enable JIT from the browser settings.", comment: "Paragraph break intentional"),
-            actionButtonTitle: NSLocalizedString("Quit Reynard", comment: ""),
+            actionButtonTitle: NSLocalizedString("Quit Moezilla", comment: ""),
             onPrimaryAction: {
                 self.disableJITAndQuit()
             }

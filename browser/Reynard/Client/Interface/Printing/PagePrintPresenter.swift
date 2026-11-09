@@ -60,7 +60,7 @@ enum PagePrintPresenter {
     
     private static func normalizedJobName(_ jobName: String?) -> String {
         let trimmedName = jobName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmedName.isEmpty ? "Reynard" : trimmedName
+        return trimmedName.isEmpty ? "Moezilla" : trimmedName
     }
 }
 

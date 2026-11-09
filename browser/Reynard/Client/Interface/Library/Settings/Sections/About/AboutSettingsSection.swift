@@ -55,7 +55,7 @@ final class AboutSettingsSection {
             let info = Bundle.main.infoDictionary
             let version = info?["CFBundleShortVersionString"] as? String ?? "Unknown"
             let build = info?["CFBundleVersion"] as? String ?? "Unknown"
-            return valueCell(title: NSLocalizedString("Reynard Browser", comment: ""), value: "\(version) (\(build))")
+            return valueCell(title: NSLocalizedString("Moezilla Browser", comment: ""), value: "\(version) (\(build))")
         case .engineVersion:
             return valueCell(title: NSLocalizedString("Engine Version", comment: ""), value: GeckoRuntime.version)
         case .sourceCode:
@@ -89,7 +89,7 @@ final class AboutSettingsSection {
     private func url(for row: Row) -> URL? {
         switch row {
         case .sourceCode:
-            return URL(string: "https://github.com/minh-ton/reynard-browser")
+            return URL(string: "https://github.com/MNaqq/moezilla")
         case .supportProject:
             return URL(string: "https://buymeacoffee.com/hnimnot")
         case .githubProfile:

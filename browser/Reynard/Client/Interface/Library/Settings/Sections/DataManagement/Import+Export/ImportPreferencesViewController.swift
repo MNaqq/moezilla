@@ -86,7 +86,7 @@ final class ImportPreferencesViewController: SettingsTableViewController {
             cell.configure(
                 iconName: "reynard.iphone.and.arrow.right.inward",
                 title: NSLocalizedString("Import Browsing Data", comment: ""),
-                description: NSLocalizedString("Import your bookmarks, history, and other browser data into Reynard.", comment: "")
+                description: NSLocalizedString("Import your bookmarks, history, and other browser data into Moezilla.", comment: "")
             )
             return cell
         case .file:

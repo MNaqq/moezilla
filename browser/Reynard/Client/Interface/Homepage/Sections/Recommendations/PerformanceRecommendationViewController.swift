@@ -32,7 +32,7 @@ final class PerformanceRecommendationViewController: UIViewController, HomepageR
     private enum PerformanceRecommendationLink {
         static let enableInAppJITGuide = URL(string: "https://github.com/minh-ton/reynard-browser/wiki/Manually-Enabling-JIT")!
         static let installTrollStoreGuide = URL(string: "https://ios.cfw.guide/installing-trollstore/")!
-        static let downloadTrollStoreBuild = URL(string: "https://github.com/minh-ton/reynard-browser/releases/latest")!
+        static let downloadTrollStoreBuild = URL(string: "https://github.com/MNaqq/moezilla/releases/latest")!
     }
     
     private enum PerformanceRecommendationAction {
@@ -53,7 +53,7 @@ final class PerformanceRecommendationViewController: UIViewController, HomepageR
             case .enableInAppJIT:
                 return NSLocalizedString("Enable JIT to improve performance and ensure websites work properly.", comment: "")
             case .installTrollStore:
-                return NSLocalizedString("Install the TrollStore version of Reynard to enable JIT automatically for improved performance and to ensure websites work properly.", comment: "")
+                return NSLocalizedString("Install the TrollStore version of Moezilla to enable JIT automatically for improved performance and to ensure websites work properly.", comment: "")
             }
         }
         
@@ -71,7 +71,7 @@ final class PerformanceRecommendationViewController: UIViewController, HomepageR
             case .enableInAppJIT:
                 return NSLocalizedString("Open Settings", comment: "")
             case .installTrollStore:
-                return NSLocalizedString("Download Reynard (.tipa)", comment: "")
+                return NSLocalizedString("Download Moezilla (.tipa)", comment: "")
             }
         }
         

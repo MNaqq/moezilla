@@ -86,7 +86,7 @@ final class PrivateBrowsingSectionViewController: UIViewController {
         label.font = UIFontMetrics(forTextStyle: .body).scaledFont(
             for: .systemFont(ofSize: UX.messageFontSize, weight: .regular)
         )
-        label.text = NSLocalizedString("After you close a tab, Reynard won’t remember any of your browsing history or cookies. However, downloads and new bookmarks will be saved.", comment: "")
+        label.text = NSLocalizedString("After you close a tab, Moezilla won’t remember any of your browsing history or cookies. However, downloads and new bookmarks will be saved.", comment: "")
         label.textAlignment = .center
         label.textColor = .secondaryLabel
         label.numberOfLines = 0

@@ -333,7 +333,7 @@ final class TabOverviewCollection: NSObject {
         titleLabel.font = .preferredFont(forTextStyle: .title2)
         titleLabel.adjustsFontForContentSizeCategory = true
         let subtitleLabel = UILabel()
-        subtitleLabel.text = NSLocalizedString("Reynard won’t remember any of your browsing history or cookies. However, downloads and new bookmarks will be saved.", comment: "")
+        subtitleLabel.text = NSLocalizedString("Moezilla won’t remember any of your browsing history or cookies. However, downloads and new bookmarks will be saved.", comment: "")
         subtitleLabel.textAlignment = .center
         subtitleLabel.textColor = .secondaryLabel
         subtitleLabel.font = .preferredFont(forTextStyle: .subheadline)

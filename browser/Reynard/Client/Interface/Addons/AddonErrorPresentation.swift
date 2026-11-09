@@ -101,13 +101,13 @@ public struct AddonErrorPresenter {
         case "ERROR_BLOCKLISTED":
             return AddonErrorPresentation(
                 statusText: NSLocalizedString("Blocked", comment: ""),
-                alertMessage: String(format: NSLocalizedString("%@ violates Mozilla’s policies and can’t be installed on Reynard.", tableName: "AddonLocalizable", comment: "Add-on name"), resolvedAddonName),
+                alertMessage: String(format: NSLocalizedString("%@ violates Mozilla’s policies and can’t be installed on Moezilla.", tableName: "AddonLocalizable", comment: "Add-on name"), resolvedAddonName),
                 isUserCancelled: false
             )
         case "ERROR_SOFT_BLOCKED":
             return AddonErrorPresentation(
                 statusText: NSLocalizedString("Restricted", comment: ""),
-                alertMessage: String(format: NSLocalizedString("%@ is restricted and can’t be installed on Reynard.", tableName: "AddonLocalizable", comment: "Add-on name"), resolvedAddonName),
+                alertMessage: String(format: NSLocalizedString("%@ is restricted and can’t be installed on Moezilla.", tableName: "AddonLocalizable", comment: "Add-on name"), resolvedAddonName),
                 isUserCancelled: false
             )
         case "ERROR_NETWORK_FAILURE":
@@ -131,7 +131,7 @@ public struct AddonErrorPresenter {
         case "ERROR_INCOMPATIBLE":
             return AddonErrorPresentation(
                 statusText: NSLocalizedString("Incompatible", comment: ""),
-                alertMessage: String(format: NSLocalizedString("%@ couldn’t be installed because it isn’t compatible with this version of Reynard.", tableName: "AddonLocalizable", comment: "Add-on name"), resolvedAddonName),
+                alertMessage: String(format: NSLocalizedString("%@ couldn’t be installed because it isn’t compatible with this version of Moezilla.", tableName: "AddonLocalizable", comment: "Add-on name"), resolvedAddonName),
                 isUserCancelled: false
             )
         case "ERROR_ADMIN_INSTALL_ONLY":
