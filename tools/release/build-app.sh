@@ -37,7 +37,7 @@ sed -i '' -E \
 if [ "$NIGHTLY" = true ]; then
 	sed -i '' -E \
 	-e 's|^(CURRENT_VERSION = [0-9.]+)$|\1-dev|' \
-	-e 's|^APP_DISPLAY_NAME = .*|APP_DISPLAY_NAME = Reynard (Nightly)|' \
+	-e 's|^APP_DISPLAY_NAME = .*|APP_DISPLAY_NAME = Moezilla (Nightly)|' \
 	"$BUILD_XCCONFIG_PATH"
 fi
 
@@ -46,6 +46,7 @@ run_xcodebuild() {
 		-scheme "Reynard" \
 		-archivePath "$DIST_DIR/Reynard.xcarchive" \
 		-project "$PROJECT_PATH" \
+		-derivedDataPath "${MOEZILLA_DERIVED_DATA:-$HOME/.moezilla-build/DerivedData}" \
 		-sdk iphoneos \
 		-arch arm64 \
 		-configuration Release \
