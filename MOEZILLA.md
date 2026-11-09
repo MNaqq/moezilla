@@ -13,7 +13,7 @@ Moezilla is a community fork of [Reynard](https://github.com/minh-ton/reynard-br
 
 Under **Settings > Advanced > Developer**, turn on Remote Debugging via USB and then enable Continue debugging in background. On the Mac, pair the device and run iproxy 6000:6000 with libimobiledevice, then connect Firefox about:debugging to localhost:6000.
 
-iOS controls whether continued processing is granted and when the task is suspended or expired. It does not provide an indefinite background execution guarantee. If iOS ends the task, reconnect when Moezilla becomes foreground-active and start a fresh session from Developer settings.
+iOS controls whether continued processing is granted and when the task is suspended or expired. It does not provide an indefinite background execution guarantee. If iOS ends the task, Moezilla restores the debugger preferences and automatically re-requests execution when the app returns to foreground, but only for a previously user-started session. Turning off the switch clears that intent.
 
 ### Development validation
 

@@ -60,6 +60,15 @@ class MoezillaConfigurationTests(unittest.TestCase):
         self.assertIn("BackgroundDebuggingSession.shared.start()", ui)
         self.assertIn("BackgroundDebuggingSession.shared.stop()", ui)
 
+    def test_requested_session_restarts_only_after_foreground(self):
+        source = self.source("browser/Reynard/BackgroundDebuggingSession.swift")
+        self.assertIn("private static let recoveryPreference", source)
+        self.assertIn("UserDefaults.standard.bool(forKey:", source)
+        self.assertIn("shouldRestoreSession = true", source)
+        self.assertIn("if success {\n            shouldRestoreSession = false", source)
+        self.assertIn("guard shouldRestoreSession && !isRunning else { return }", source)
+        self.assertIn("try start()", source)
+
     def test_gecko_foreground_lifecycle(self):
         scene = self.source("browser/Reynard/SceneDelegate.swift")
         self.assertIn("guard !BackgroundDebuggingSession.shared.isRunning", scene)

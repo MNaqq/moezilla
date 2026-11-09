@@ -13,6 +13,13 @@ final class BackgroundDebuggingSession {
     static let shared = BackgroundDebuggingSession()
 
     private static let taskIdentifier = "com.bonewizardry.Moezilla.backgroundDebugging"
+    private static let recoveryPreference = "Moezilla.RemoteDebugging.RestoreOnForeground"
+
+    private var shouldRestoreSession: Bool {
+        get { UserDefaults.standard.bool(forKey: Self.recoveryPreference) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.recoveryPreference) }
+    }
+
     private var continuedTask: BGTask?
     private var legacyBackgroundTask: UIBackgroundTaskIdentifier = .invalid
 
@@ -92,6 +99,10 @@ final class BackgroundDebuggingSession {
                 throw SessionError.unableToStart
             }
         }
+
+        // This preference is set only after an explicit successful start.
+        // It permits recovery on foreground re-entry, never unattended launch.
+        shouldRestoreSession = true
     }
 
     private func handle(_ task: BGTask) {
@@ -112,6 +123,11 @@ final class BackgroundDebuggingSession {
     }
 
     func stop(success: Bool = true) {
+        // The user stopping the session clears consent. System expiration
+        // preserves it so the session can be restored on next foreground.
+        if success {
+            shouldRestoreSession = false
+        }
         isRunning = false
 
         if #available(iOS 26.0, *) {
@@ -144,10 +160,21 @@ final class BackgroundDebuggingSession {
     }
 
     func restoreRemoteDebuggingOnForeground() {
-        // This reapplies debugger preferences when iOS resumes the process,
-        // without silently launching a new background job.
-        if Prefs.DeveloperSettings.remoteDebuggingEnabled {
-            RemoteDebuggingSettingController.applyRemoteDebugging()
+        guard Prefs.DeveloperSettings.remoteDebuggingEnabled else {
+            // Revoking USB debugging revokes continued background operation.
+            stop()
+            return
+        }
+
+        RemoteDebuggingSettingController.applyRemoteDebugging()
+        guard shouldRestoreSession && !isRunning else { return }
+
+        // Re-request execution only after an earlier user-started session
+        // expires and the app has returned to the foreground.
+        do {
+            try start()
+        } catch {
+            NSLog("Moezilla remote-debugging recovery unavailable: %@", error.localizedDescription)
         }
     }
 }
