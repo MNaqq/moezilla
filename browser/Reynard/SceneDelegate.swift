@@ -39,6 +39,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         browserViewController.startScreenOrientationHandling()
         browserViewController.sessionManager.applicationDidBecomeActive()
         browserViewController.tabManager.applicationDidBecomeActive()
+        BackgroundDebuggingSession.shared.restoreRemoteDebuggingOnForeground()
     }
     
     func sceneWillResignActive(_ scene: UIScene) {
@@ -66,6 +67,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     func sceneDidEnterBackground(_ scene: UIScene) {
+        // A foreground-started automation session may continue running until
+        // iOS expires it; otherwise retain Reynard's original suspension.
+        guard !BackgroundDebuggingSession.shared.isRunning else { return }
         (window?.rootViewController as? BrowserViewController)?
             .sessionManager.setApplicationForeground(false)
     }
@@ -99,7 +103,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return incomingURL
         }
         
-        guard scheme == "reynard",
+        guard scheme == "moezilla",
               let components = URLComponents(url: incomingURL, resolvingAgainstBaseURL: false),
               let encodedURL = components.queryItems?.first(where: { $0.name == "url" })?.value else {
             return nil

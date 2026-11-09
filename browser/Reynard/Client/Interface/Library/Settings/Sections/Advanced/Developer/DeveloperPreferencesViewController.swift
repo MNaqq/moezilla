@@ -25,10 +25,12 @@ final class DeveloperPreferencesViewController: SettingsTableViewController, UIT
     private enum Row {
         case remoteDebugging
         case remoteDebuggingPort
+        case backgroundDebugging
     }
     
     private var isDebuggingEnabled = Prefs.DeveloperSettings.remoteDebuggingEnabled
     private let debugSwitch = UISwitch()
+    private let backgroundDebugSwitch = UISwitch()
     private weak var footerTextView: UITextView?
     private let portTextField: UITextField = {
         let textField = UITextField(
@@ -48,7 +50,7 @@ final class DeveloperPreferencesViewController: SettingsTableViewController, UIT
     
     private var displayedRows: [Row] {
         return isDebuggingEnabled
-        ? [.remoteDebugging, .remoteDebuggingPort]
+        ? [.remoteDebugging, .remoteDebuggingPort, .backgroundDebugging]
         : [.remoteDebugging]
     }
     
@@ -72,12 +74,18 @@ final class DeveloperPreferencesViewController: SettingsTableViewController, UIT
             for: .valueChanged
         )
         portTextField.delegate = self
+        backgroundDebugSwitch.addTarget(
+            self,
+            action: #selector(backgroundDebugSwitchDidChange),
+            for: .valueChanged
+        )
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         isDebuggingEnabled = Prefs.DeveloperSettings.remoteDebuggingEnabled
         debugSwitch.isOn = isDebuggingEnabled
+        backgroundDebugSwitch.isOn = BackgroundDebuggingSession.shared.isRunning
         portTextField.text = String(Prefs.DeveloperSettings.remoteDebuggingPort)
         tableView.reloadData()
     }
@@ -159,6 +167,9 @@ final class DeveloperPreferencesViewController: SettingsTableViewController, UIT
             cell.textLabel?.text = NSLocalizedString("Remote Debugging Port", comment: "")
             cell.accessoryView = portTextField
             portTextField.text = String(Prefs.DeveloperSettings.remoteDebuggingPort)
+        case .backgroundDebugging:
+            cell.textLabel?.text = "Continue debugging in background"
+            cell.accessoryView = backgroundDebugSwitch
         }
         cell.selectionStyle = .none
         return cell
@@ -176,6 +187,8 @@ final class DeveloperPreferencesViewController: SettingsTableViewController, UIT
             break
         case .remoteDebuggingPort:
             portTextField.becomeFirstResponder()
+        case .backgroundDebugging:
+            break
         }
     }
     
@@ -213,6 +226,10 @@ final class DeveloperPreferencesViewController: SettingsTableViewController, UIT
     
     @objc private func debugSwitchDidChange(_ sender: UISwitch) {
         Prefs.DeveloperSettings.remoteDebuggingEnabled = sender.isOn
+        if !sender.isOn {
+            BackgroundDebuggingSession.shared.stop()
+            backgroundDebugSwitch.isOn = false
+        }
         RemoteDebuggingSettingController.applyRemoteDebugging()
         
         if !sender.isOn {
@@ -222,6 +239,25 @@ final class DeveloperPreferencesViewController: SettingsTableViewController, UIT
         tableView.reloadData()
     }
     
+    @objc private func backgroundDebugSwitchDidChange(_ sender: UISwitch) {
+        guard sender.isOn else {
+            BackgroundDebuggingSession.shared.stop()
+            return
+        }
+        do {
+            try BackgroundDebuggingSession.shared.start()
+        } catch {
+            sender.setOn(false, animated: true)
+            let alert = UIAlertController(
+                title: "Background debugging unavailable",
+                message: error.localizedDescription,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        }
+    }
+
     private func savePort() {
         guard let text = portTextField.text,
               let port = Int(text),

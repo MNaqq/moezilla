@@ -1011,7 +1011,15 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         && !browserChrome.isShowingFindInPage
         && (presentedController == nil || presentedController?.isBeingDismissed == true)
         
-        if shouldRelocateInput {
+        // Moezilla: UIKit can focus the address text field before the search
+        // overlay reports focus. Dock the URL bar for either focus source.
+        let shouldDockAddressBar = shouldAdjustForKeyboard
+        && browserLayout.chromeMode == .phone
+        && (searchOverlayCoordinator.isFocused || browserChrome.isAddressBarEditing)
+        if shouldDockAddressBar {
+            toolbarController.reset(animated: false)
+        }
+        if shouldRelocateInput || shouldDockAddressBar {
             toolbarController.lock(for: .inputRelocation)
         } else {
             toolbarController.unlock(for: .inputRelocation)
@@ -1025,8 +1033,6 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         }
         let shouldDockActionBar = shouldAdjustForKeyboard
         && (browserChrome.isShowingFindInPage || browserChrome.isShowingKeyboardDismissal)
-        let shouldDockAddressBar = shouldAdjustForKeyboard
-        && browserLayout.chromeMode == .phone && searchOverlayCoordinator.isFocused
         browserChrome.dockActionBar(offset: shouldDockActionBar ? -keyboardOverlap : 0)
         browserChrome.dockAddressBar(offset: shouldDockAddressBar ? -keyboardInset : 0)
         animateLayout(animation)
