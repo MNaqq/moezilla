@@ -185,22 +185,22 @@ jobs:
         if: ${{ matrix.variant == 'standard' && inputs.build_normal_ipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: Reynard.ipa
-          path: dist/Reynard.ipa
+          name: Moezilla.ipa
+          path: dist/Moezilla.ipa
           if-no-files-found: error
 
       - name: Upload TrollStore TIPA
         if: ${{ matrix.variant == 'standard' && inputs.build_trollstore_tipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: Reynard-TrollStore.tipa
-          path: dist/Reynard-TrollStore.tipa
+          name: Moezilla-TrollStore.tipa
+          path: dist/Moezilla-TrollStore.tipa
           if-no-files-found: error
 
       - name: Upload Jailbroken IPA
         if: ${{ matrix.variant == 'nojemalloc' && inputs.build_jailbroken_ipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: Reynard-Jailbroken.ipa
-          path: dist/Reynard-Jailbroken.ipa
+          name: Moezilla-Jailbroken.ipa
+          path: dist/Moezilla-Jailbroken.ipa
           if-no-files-found: error

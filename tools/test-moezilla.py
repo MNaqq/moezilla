@@ -70,6 +70,22 @@ class MoezillaConfigurationTests(unittest.TestCase):
         self.assertIn("handler->InsertText(aText)", insert)
         self.assertIn("self.markedTextRange == nil", insert)
 
+    def test_ipa_packaging_keeps_moezilla_identity(self):
+        packaging = self.source("tools/release/create-ipa.sh")
+        self.assertIn('OUTPUT_NAME="Moezilla.ipa"', packaging)
+        self.assertIn('OUTPUT_NAME="Moezilla-TrollStore.tipa"', packaging)
+        self.assertIn('com.bonewizardry.Moezilla', packaging)
+        self.assertNotIn('plutil -replace CFBundleIdentifier -string "com.minh-ton.Reynard"', packaging)
+        workflow = self.source(".github/workflows/build.yml")
+        self.assertIn("path: dist/Moezilla.ipa", workflow)
+
+    def test_sharing_and_updates_stay_in_fork(self):
+        extension = self.source("browser/Extensions/OpenIn/OpenInViewController.swift")
+        self.assertIn('URLComponents(string: "moezilla://open")', extension)
+        updater = self.source("browser/Reynard/Client/Startup/BrowserUpdates.swift")
+        self.assertIn("github.com/MNaqq/moezilla/releases", updater)
+        self.assertNotIn("github.com/minh-ton/reynard-browser/releases", updater)
+
     def test_gecko_patch_applies_as_valid_new_file(self):
         patch = ROOT / "patches/widget/uikit/GeckoEditableSupport.mm.patch"
         with tempfile.TemporaryDirectory() as temp:

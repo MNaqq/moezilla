@@ -131,9 +131,9 @@ final class UpdatesSettingsSection {
         
         let expectedSize = latestEntry["size"] as? Int
         if installedThroughTrollStore {
-            let packageFileName = isJailbreakBuild ? "Reynard-Jailbroken.ipa" : "Reynard-TrollStore.tipa"
+            let packageFileName = isJailbreakBuild ? "Moezilla-Jailbroken.ipa" : "Moezilla-TrollStore.tipa"
             let trollStorePackageURLString = packageURLString.replacingOccurrences(
-                of: "Reynard.ipa",
+                of: "Moezilla.ipa",
                 with: packageFileName
             )
             let encodedPackageURLString = trollStorePackageURLString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ??
@@ -147,9 +147,9 @@ final class UpdatesSettingsSection {
         } else {
             downloadUpdate(
                 from: packageURL,
-                fileName: "Reynard.ipa",
+                fileName: "Moezilla.ipa",
                 expectedSize: expectedSize,
-                message: NSLocalizedString("When the download finishes, choose the app that you used to sideload Reynard in the share sheet to install the update.", comment: ""),
+                message: NSLocalizedString("When the download finishes, choose the app that you used to sideload Moezilla in the share sheet to install the update.", comment: ""),
                 viewController: viewController
             )
         }

@@ -74,7 +74,7 @@ final class OpenInViewController: UIViewController {
     }
     
     private func browserOpenURL(for sharedURL: URL) -> URL? {
-        guard var components = URLComponents(string: "reynard://open") else {
+        guard var components = URLComponents(string: "moezilla://open") else {
             return nil
         }
         
