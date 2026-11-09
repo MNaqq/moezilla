@@ -24,6 +24,19 @@ class MoezillaConfigurationTests(unittest.TestCase):
         self.assertIn("com.bonewizardry.Moezilla", project)
         self.assertNotIn('PRODUCT_BUNDLE_IDENTIFIER = "com.minh-ton.Reynard"', project)
 
+    def test_debug_build_uses_standard_provisioning(self):
+        project = self.source("browser/Reynard.xcodeproj/project.pbxproj")
+        self.assertIn("Reynard/Entitlements/Moezilla-Debug.entitlements", project)
+        self.assertIn("Helper/Entitlements/Moezilla-Helper-Debug.entitlements", project)
+        self.assertIn("Reynard/Entitlements/Reynard.entitlements", project)
+        self.assertIn("Helper/Entitlements/Reynard-Helper.entitlements", project)
+        for rel in (
+            "browser/Reynard/Entitlements/Moezilla-Debug.entitlements",
+            "browser/Helper/Entitlements/Moezilla-Helper-Debug.entitlements",
+        ):
+            entitlements = plistlib.loads((ROOT / rel).read_bytes())
+            self.assertNotIn("com.apple.developer.kernel.increased-memory-limit", entitlements)
+
     def test_custom_scheme_matches_scene_delegate(self):
         schemes = self.info["CFBundleURLTypes"][0]["CFBundleURLSchemes"]
         self.assertIn("moezilla", schemes)

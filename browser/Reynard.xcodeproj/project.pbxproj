@@ -507,7 +507,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "$(SRCROOT)/Reynard/Entitlements/Reynard.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "$(SRCROOT)/Reynard/Entitlements/Moezilla-Debug.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_BUILD)";
@@ -887,7 +887,7 @@
 			baseConfigurationReference = 01GECKO0052F2F289C001F0001 /* Reynard.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = "$(SRCROOT)/Helper/Entitlements/Reynard-Helper.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "$(SRCROOT)/Helper/Entitlements/Moezilla-Helper-Debug.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_BUILD)";
 				DEVELOPMENT_TEAM = NAR5D6HWAD;
