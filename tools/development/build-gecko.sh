@@ -10,6 +10,7 @@ TARGET="aarch64-apple-ios"
 USE_SCCACHE=false
 AUTO_CLOBBER=false
 DISABLE_JEMALLOC=false
+USE_APPLE_LINKER=false
 
 for arg in "$@"; do
 	case "$arg" in
@@ -21,6 +22,9 @@ for arg in "$@"; do
 			;;
 		--disable-jemalloc)
 			DISABLE_JEMALLOC=true
+			;;
+		--use-apple-linker)
+			USE_APPLE_LINKER=true
 			;;
 	esac
 done
@@ -48,7 +52,14 @@ fi
 	echo "ac_add_options --enable-optimize"
 	echo "ac_add_options --enable-release"
 	echo "ac_add_options --enable-rust-simd"
-	echo "ac_add_options --enable-lto"
+	if [ "$USE_APPLE_LINKER" = true ]; then
+		# Xcode 27 SDK declares arm64e.x1 slices unsupported by Firefox 159's LLD.
+		# Apple ld64 accepts them, but LLVM LTO bitcode is incompatible.
+		echo "ac_add_options --enable-linker=ld64"
+		echo "ac_add_options --disable-lto"
+	else
+		echo "ac_add_options --enable-lto"
+	fi
 	echo "ac_add_options --disable-debug"
 	echo "ac_add_options --disable-tests"
 	echo "ac_add_options --enable-bootstrap"

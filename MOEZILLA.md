@@ -17,6 +17,6 @@ iOS controls whether continued processing is granted and when the task is suspen
 
 ### Development validation
 
-Apply the repository's Gecko patch series to the Firefox submodule, build the Gecko engine, and build the iOS Xcode project. Test key entry and paste on a real device running iOS 27 in Reddit search and a plain HTML input, test URL editing while the onscreen keyboard is visible, then verify the USB debugging connection survives a foreground-to-background transition when iOS grants a continued-processing task.
+Apply the repository's Gecko patch series to the Firefox submodule, build the Gecko engine, and build the iOS Xcode project. On Xcode 27 use tools/development/build-gecko.sh --use-apple-linker --auto-clobber to avoid Firefox 159's bundled LLD failing on the new arm64e.x1 iOS SDK stubs. Test key entry and paste on a real device running iOS 27 in Reddit search and a plain HTML input, test URL editing while the onscreen keyboard is visible, then verify the USB debugging connection survives a foreground-to-background transition when iOS grants a continued-processing task.
 
 This fork retains Reynard's license and attribution. Code is experimental until tested on a real device.
