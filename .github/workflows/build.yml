@@ -1,4 +1,4 @@
-name: Build Reynard
+name: Build Moezilla
 
 on:
   workflow_call:
@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   prepare:
-    if: ${{ github.repository_owner == 'minh-ton' }}
+    if: ${{ github.repository == 'MNaqq/moezilla' }}
     name: Select build variants
     runs-on: ubuntu-latest
     outputs:
