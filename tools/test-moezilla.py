@@ -54,8 +54,11 @@ class MoezillaConfigurationTests(unittest.TestCase):
 
     def test_address_bar_docks_on_direct_focus(self):
         src = self.source("browser/Reynard/Client/Interface/BrowserViewController.swift")
-        self.assertIn("searchOverlayCoordinator.isFocused || browserChrome.isAddressBarEditing", src)
+        self.assertIn("shouldRelocateInput\n            || searchOverlayCoordinator.isFocused", src)
+        self.assertIn("|| browserChrome.isAddressBarEditing", src)
         self.assertIn("browserChrome.dockAddressBar(offset: shouldDockAddressBar", src)
+        self.assertIn("max(browserChrome.addressBar.bounds.height, 44) + 8", src)
+        self.assertIn("&& !shouldDockAddressBar", src)
 
     def test_webpage_typing_uses_native_replacement_on_ios27(self):
         patch = self.source("patches/widget/uikit/GeckoEditableSupport.mm.patch")

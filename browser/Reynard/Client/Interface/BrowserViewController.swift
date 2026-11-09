@@ -1011,11 +1011,14 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         && !browserChrome.isShowingFindInPage
         && (presentedController == nil || presentedController?.isBeingDismissed == true)
         
-        // Moezilla: UIKit can focus the address text field before the search
-        // overlay reports focus. Dock the URL bar for either focus source.
+        // Moezilla: keep the browser's URL bar visible directly above the
+        // keyboard for BOTH webpage text fields and URL-bar editing.
+        // UIKit can focus the address field before the overlay reports focus.
         let shouldDockAddressBar = shouldAdjustForKeyboard
         && browserLayout.chromeMode == .phone
-        && (searchOverlayCoordinator.isFocused || browserChrome.isAddressBarEditing)
+        && (shouldRelocateInput
+            || searchOverlayCoordinator.isFocused
+            || browserChrome.isAddressBarEditing)
         if shouldDockAddressBar {
             toolbarController.reset(animated: false)
         }
@@ -1026,7 +1029,10 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         }
         
         let animation = keyboardAnimation(from: notification)
-        if shouldRelocateInput && browserLayout.interfaceIdiom == .phone {
+        // The docking URL bar takes the place of the small keyboard-dismiss
+        // action bar on phones, avoiding two controls in the same space.
+        if shouldRelocateInput && browserLayout.interfaceIdiom == .phone
+            && !shouldDockAddressBar {
             browserChrome.showActionBar(.keyboardDismissal, animated: false)
         } else if browserChrome.isShowingKeyboardDismissal {
             browserChrome.dismissActionBar(animated: false)
@@ -1039,7 +1045,9 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         
         contentView.updateFocusedInputRelocation(
             above: shouldRelocateInput ? keyboardFrame : nil,
-            bottomInset: browserChrome.isShowingKeyboardDismissal ? ActionBarStyle.compact.height : 0,
+            bottomInset: shouldDockAddressBar && shouldRelocateInput
+                ? max(browserChrome.addressBar.bounds.height, 44) + 8
+                : (browserChrome.isShowingKeyboardDismissal ? ActionBarStyle.compact.height : 0),
             animationDuration: animation.duration,
             animationOptions: animation.curve
         )
