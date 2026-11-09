@@ -65,6 +65,10 @@ class MoezillaConfigurationTests(unittest.TestCase):
         self.assertIn("guard !BackgroundDebuggingSession.shared.isRunning", scene)
         self.assertIn("restoreRemoteDebuggingOnForeground()", scene)
 
+    def test_address_bar_accessibility_identifier(self):
+        source = self.source("browser/Reynard/Client/Interface/Chrome/AddressBar/AddressBar.swift")
+        self.assertIn('field.accessibilityIdentifier = "Moezilla.AddressBar"', source)
+
     def test_address_bar_docks_on_direct_focus(self):
         src = self.source("browser/Reynard/Client/Interface/BrowserViewController.swift")
         self.assertIn("shouldRelocateInput\n            || searchOverlayCoordinator.isFocused", src)

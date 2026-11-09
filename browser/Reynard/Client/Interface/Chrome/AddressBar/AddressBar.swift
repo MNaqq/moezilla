@@ -226,6 +226,8 @@ final class AddressBar: UIView {
     
     private let textField: AddressBarTextField = {
         let field = AddressBarTextField()
+        // Stable identifier for on-device keyboard and toolbar regression tests.
+        field.accessibilityIdentifier = "Moezilla.AddressBar"
         field.translatesAutoresizingMaskIntoConstraints = false
         field.borderStyle = .none
         field.backgroundColor = .clear
