@@ -1,8 +1,6 @@
-name: Build Nightly
+name: Moezilla Build (manual)
 
 on:
-  schedule:
-    - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       build_normal_ipa:
@@ -29,7 +27,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       checkout_ref: ${{ github.sha }}
-      nightly: true
+      nightly: false
       build_normal_ipa: ${{ github.event_name == 'schedule' || inputs.build_normal_ipa }}
       build_trollstore_tipa: ${{ github.event_name == 'schedule' || inputs.build_trollstore_tipa }}
       build_jailbroken_ipa: ${{ github.event_name == 'schedule' || inputs.build_jailbroken_ipa }}

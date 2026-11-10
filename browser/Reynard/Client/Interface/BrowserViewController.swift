@@ -829,6 +829,14 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
             name: UIResponder.keyboardWillChangeFrameNotification,
             object: nil
         )
+        // Re-evaluate once UIKit finishes bringing up the keyboard. The
+        // address field may become first responder after the will-change event.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardFrameWillChange(_:)),
+            name: UIResponder.keyboardDidShowNotification,
+            object: nil
+        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillHide(_:)),
@@ -1000,10 +1008,11 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         let sitsFlushWithBottom = keyboardFrame.maxY >= view.bounds.maxY - 8
         let isFloatingKeyboard = browserLayout.interfaceIdiom == .pad
         && !(spansWindow && sitsFlushWithBottom)
+        let hasVisibleSoftwareKeyboard = spansWindow && sitsFlushWithBottom && keyboardInset > 100
         let shouldAdjustForKeyboard = keyboardInset > 0
         && !isFloatingKeyboard
         && !tabOverview.isPresented
-        && !isHardwareKeyboardMode
+        && (!isHardwareKeyboardMode || hasVisibleSoftwareKeyboard)
         
         let presentedController = presentedControllerInHierarchy
         let shouldRelocateInput = shouldAdjustForKeyboard
@@ -1011,29 +1020,43 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         && !browserChrome.isShowingFindInPage
         && (presentedController == nil || presentedController?.isBeingDismissed == true)
         
-        if shouldRelocateInput {
+        // Moezilla: keep the browser's URL bar visible directly above the
+        // keyboard for BOTH webpage text fields and URL-bar editing.
+        // UIKit can focus the address field before the overlay reports focus.
+        let shouldDockAddressBar = shouldAdjustForKeyboard
+        && browserLayout.chromeMode == .phone
+        && (shouldRelocateInput
+            || searchOverlayCoordinator.isFocused
+            || browserChrome.isAddressBarEditing)
+        if shouldDockAddressBar {
+            toolbarController.reset(animated: false)
+        }
+        if shouldRelocateInput || shouldDockAddressBar {
             toolbarController.lock(for: .inputRelocation)
         } else {
             toolbarController.unlock(for: .inputRelocation)
         }
         
         let animation = keyboardAnimation(from: notification)
-        if shouldRelocateInput && browserLayout.interfaceIdiom == .phone {
+        // The docking URL bar takes the place of the small keyboard-dismiss
+        // action bar on phones, avoiding two controls in the same space.
+        if shouldRelocateInput && browserLayout.interfaceIdiom == .phone
+            && !shouldDockAddressBar {
             browserChrome.showActionBar(.keyboardDismissal, animated: false)
         } else if browserChrome.isShowingKeyboardDismissal {
             browserChrome.dismissActionBar(animated: false)
         }
         let shouldDockActionBar = shouldAdjustForKeyboard
         && (browserChrome.isShowingFindInPage || browserChrome.isShowingKeyboardDismissal)
-        let shouldDockAddressBar = shouldAdjustForKeyboard
-        && browserLayout.chromeMode == .phone && searchOverlayCoordinator.isFocused
         browserChrome.dockActionBar(offset: shouldDockActionBar ? -keyboardOverlap : 0)
         browserChrome.dockAddressBar(offset: shouldDockAddressBar ? -keyboardInset : 0)
         animateLayout(animation)
         
         contentView.updateFocusedInputRelocation(
             above: shouldRelocateInput ? keyboardFrame : nil,
-            bottomInset: browserChrome.isShowingKeyboardDismissal ? ActionBarStyle.compact.height : 0,
+            bottomInset: shouldDockAddressBar && shouldRelocateInput
+                ? max(browserChrome.addressBar.bounds.height, 44) + 8
+                : (browserChrome.isShowingKeyboardDismissal ? ActionBarStyle.compact.height : 0),
             animationDuration: animation.duration,
             animationOptions: animation.curve
         )

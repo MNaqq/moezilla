@@ -3,7 +3,7 @@ new file mode 100644
 index 000000000000..dc4f34ab1b15
 --- /dev/null
 +++ b/widget/uikit/GeckoEditableSupport.mm
-@@ -0,0 +1,4215 @@
+@@ -0,0 +1,4241 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2742,7 +2742,33 @@ index 000000000000..dc4f34ab1b15
 +
 +- (void)insertText:(NSString*)aText {
 +  RefPtr<widget::TextInputHandler> handler = [self textHandler];
-+  if (handler && handler->InsertText(aText)) {
++  if (!handler) {
++    return;
++  }
++
++  // Moezilla: On iOS 27 the software keyboard can deliver insertText:
++  // without a matching Gecko keypress. The native replacement pipeline
++  // also powers Paste, which still works for affected webpage fields.
++  // Restrict this compatibility path to printable, unmarked characters;
++  // leave Return, composition, dictation and legacy OS behavior alone.
++  if (@available(iOS 27.0, *)) {
++    NSCharacterSet* controlCharacters =
++        [NSCharacterSet controlCharacterSet];
++    if ([self isEditable] && aText.length == 1 &&
++        [aText rangeOfCharacterFromSet:controlCharacters].location == NSNotFound &&
++        self.markedTextRange == nil) {
++      UITextRange* selection = self.selectedTextRange;
++      NSRange range = [self rangeForTextRange:selection];
++      if (selection && range.location != NSNotFound &&
++          handler->ReplaceRange(range, aText)) {
++        [self scrollSelectionToVisible:NO];
++        [self refreshSelectionUI];
++        return;
++      }
++    }
++  }
++
++  if (handler->InsertText(aText)) {
 +    handler->SynchronizeTextInputState();
 +    [self scrollSelectionToVisible:NO];
 +    [self refreshSelectionUI];

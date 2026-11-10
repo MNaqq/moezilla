@@ -99,7 +99,7 @@ final class AddonDetailsPreferencesViewController: SettingsTableViewController {
         
         if metaData.isUnsupported {
             return StatusMessage(
-                text: NSLocalizedString("This add-on isn’t supported by this version of Reynard and has been disabled.", comment: ""),
+                text: NSLocalizedString("This add-on isn’t supported by this version of Moezilla and has been disabled.", comment: ""),
                 color: .systemOrange
             )
         }
@@ -115,7 +115,7 @@ final class AddonDetailsPreferencesViewController: SettingsTableViewController {
         if metaData.isIncompatible {
             let addonName = metaData.name ?? addon.id
             return StatusMessage(
-                text: String(format: NSLocalizedString("%@ isn’t compatible with this version of Reynard.", tableName: "AddonLocalizable", comment: "Add-on name"), addonName),
+                text: String(format: NSLocalizedString("%@ isn’t compatible with this version of Moezilla.", tableName: "AddonLocalizable", comment: "Add-on name"), addonName),
                 color: .systemOrange
             )
         }

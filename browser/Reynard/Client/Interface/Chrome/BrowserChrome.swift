@@ -242,9 +242,12 @@ final class BrowserChrome: UIView, UIGestureRecognizerDelegate {
             interfaceIdiom: state.interfaceIdiom,
             sidebarButtonVisible: state.sidebarButtonVisible
         )
+        // Keep the navigation row available when a suggestion overlay was
+        // dismissed by scrolling. The prior state can outlive the keyboard,
+        // leaving a visible but entirely icon-less bottom toolbar.
         bottomToolbar.apply(
             state: bottomState,
-            hidesButtons: state.search == .scrollingEmbeddedSuggestions
+            hidesButtons: false
         )
         addressBar.setDismissButtonVisible(
             state.search.showsAddressBarDismissButton && state.presentation == .browsing,

@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""Moezilla source and integration-contract tests (not a substitute for device tests)."""
+import plistlib
+import re
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+class MoezillaConfigurationTests(unittest.TestCase):
+    def setUp(self):
+        self.info = plistlib.loads((ROOT / "browser/Reynard/Resources/Info.plist").read_bytes())
+
+    def source(self, rel):
+        return (ROOT / rel).read_text()
+
+    def test_independent_browser_identity(self):
+        config = self.source("browser/Configuration/Reynard.xcconfig")
+        self.assertIn("APP_DISPLAY_NAME = Moezilla", config)
+        project = self.source("browser/Reynard.xcodeproj/project.pbxproj")
+        self.assertIn("com.bonewizardry.Moezilla", project)
+        self.assertNotIn('PRODUCT_BUNDLE_IDENTIFIER = "com.minh-ton.Reynard"', project)
+
+    def test_debug_build_uses_standard_provisioning(self):
+        project = self.source("browser/Reynard.xcodeproj/project.pbxproj")
+        self.assertIn("Reynard/Entitlements/Moezilla-Debug.entitlements", project)
+        self.assertIn("Helper/Entitlements/Moezilla-Helper-Debug.entitlements", project)
+        self.assertIn("Reynard/Entitlements/Reynard.entitlements", project)
+        self.assertIn("Helper/Entitlements/Reynard-Helper.entitlements", project)
+        for rel in (
+            "browser/Reynard/Entitlements/Moezilla-Debug.entitlements",
+            "browser/Helper/Entitlements/Moezilla-Helper-Debug.entitlements",
+        ):
+            entitlements = plistlib.loads((ROOT / rel).read_bytes())
+            self.assertNotIn("com.apple.developer.kernel.increased-memory-limit", entitlements)
+
+    def test_custom_scheme_matches_scene_delegate(self):
+        schemes = self.info["CFBundleURLTypes"][0]["CFBundleURLSchemes"]
+        self.assertIn("moezilla", schemes)
+        self.assertNotIn("reynard", schemes)
+        self.assertIn('scheme == "moezilla"', self.source("browser/Reynard/SceneDelegate.swift"))
+
+    def test_background_task_registration_contract(self):
+        code = self.source("browser/Reynard/BackgroundDebuggingSession.swift")
+        ids = self.info["BGTaskSchedulerPermittedIdentifiers"]
+        self.assertEqual(ids, ["com.bonewizardry.Moezilla.backgroundDebugging.*"])
+        # iOS 26 continued-processing tasks require a permitted wildcard prefix
+        # and a concrete task identifier with a suffix when registering.
+        self.assertIn(
+            'private static let taskIdentifier = "com.bonewizardry.Moezilla.backgroundDebugging.session"',
+            code,
+        )
+        self.assertTrue(
+            "com.bonewizardry.Moezilla.backgroundDebugging.session".startswith(ids[0][:-1])
+        )
+        self.assertIn("processing", self.info["UIBackgroundModes"])
+        self.assertIn("BGContinuedProcessingTaskRequest", code)
+        self.assertIn("if !registrationSucceeded {\n            register()\n        }", code)
+
+    def test_explicit_start_and_stop_controls(self):
+        ui = self.source(
+            "browser/Reynard/Client/Interface/Library/Settings/Sections/Advanced/Developer/"
+            "DeveloperPreferencesViewController.swift"
+        )
+        self.assertIn("Continue debugging in background", ui)
+        self.assertIn("BackgroundDebuggingSession.shared.start()", ui)
+        self.assertIn("BackgroundDebuggingSession.shared.stop()", ui)
+
+    def test_requested_session_restarts_only_after_foreground(self):
+        source = self.source("browser/Reynard/BackgroundDebuggingSession.swift")
+        self.assertIn("private static let recoveryPreference", source)
+        self.assertIn("UserDefaults.standard.bool(forKey:", source)
+        self.assertIn("shouldRestoreSession = true", source)
+        self.assertIn("if success {\n            shouldRestoreSession = false", source)
+        self.assertIn("guard shouldRestoreSession && !isRunning else { return }", source)
+        self.assertIn("try start()", source)
+
+    def test_gecko_foreground_lifecycle(self):
+        scene = self.source("browser/Reynard/SceneDelegate.swift")
+        self.assertIn("guard !BackgroundDebuggingSession.shared.isRunning", scene)
+        self.assertIn("restoreRemoteDebuggingOnForeground()", scene)
+
+    def test_homepage_starts_at_visible_top_after_layout(self):
+        root = self.source("browser/Reynard/Client/Interface/Homepage/HomepageRootViewController.swift")
+        wrapper = self.source("browser/Reynard/Client/Interface/Homepage/HomepageViewController.swift")
+        self.assertIn("hasPositionedInitialScroll", root)
+        self.assertIn("scrollView.bounds.height > 0", root)
+        self.assertIn("y: -scrollView.contentInset.top", root)
+        self.assertIn("rootViewController.resetHomepageScrollToTop()", wrapper)
+
+    def test_toolbar_icons_remain_visible_after_suggestion_scroll(self):
+        chrome = self.source("browser/Reynard/Client/Interface/Chrome/BrowserChrome.swift")
+        self.assertIn("hidesButtons: false", chrome)
+        self.assertNotIn("hidesButtons: state.search == .scrollingEmbeddedSuggestions", chrome)
+
+    def test_incremental_gecko_copy_resigns_app_if_seal_changed(self):
+        installer = self.source("tools/development/install-moezilla-device.sh")
+        self.assertIn("--preserve-metadata=entitlements,requirements,flags", installer)
+        self.assertIn("codesign --verify --deep --strict", installer)
+
+    def test_address_bar_accessibility_identifier(self):
+        source = self.source("browser/Reynard/Client/Interface/Chrome/AddressBar/AddressBar.swift")
+        self.assertIn('field.accessibilityIdentifier = "Moezilla.AddressBar"', source)
+
+    def test_address_bar_docks_on_direct_focus(self):
+        src = self.source("browser/Reynard/Client/Interface/BrowserViewController.swift")
+        self.assertIn("shouldRelocateInput\n            || searchOverlayCoordinator.isFocused", src)
+        self.assertIn("|| browserChrome.isAddressBarEditing", src)
+        self.assertIn("browserChrome.dockAddressBar(offset: shouldDockAddressBar", src)
+        self.assertIn("max(browserChrome.addressBar.bounds.height, 44) + 8", src)
+        self.assertIn("&& !shouldDockAddressBar", src)
+
+    def test_webpage_typing_uses_native_replacement_on_ios27(self):
+        patch = self.source("patches/widget/uikit/GeckoEditableSupport.mm.patch")
+        insert = patch.split("+- (void)insertText:(NSString*)aText {", 1)[1].split(
+            "+- (void)replaceRange:(UITextRange*)aRange", 1
+        )[0]
+        self.assertIn("@available(iOS 27.0, *)", insert)
+        self.assertIn("handler->ReplaceRange(range, aText)", insert)
+        self.assertIn("handler->InsertText(aText)", insert)
+        self.assertIn("self.markedTextRange == nil", insert)
+
+    def test_ipa_packaging_keeps_moezilla_identity(self):
+        packaging = self.source("tools/release/create-ipa.sh")
+        self.assertIn('OUTPUT_NAME="Moezilla.ipa"', packaging)
+        self.assertIn('OUTPUT_NAME="Moezilla-TrollStore.tipa"', packaging)
+        self.assertIn('com.bonewizardry.Moezilla', packaging)
+        self.assertNotIn('plutil -replace CFBundleIdentifier -string "com.minh-ton.Reynard"', packaging)
+        workflow = self.source(".github/workflows/build.yml")
+        self.assertIn("path: dist/Moezilla.ipa", workflow)
+
+    def test_sharing_and_updates_stay_in_fork(self):
+        extension = self.source("browser/Extensions/OpenIn/OpenInViewController.swift")
+        self.assertIn('URLComponents(string: "moezilla://open")', extension)
+        updater = self.source("browser/Reynard/Client/Startup/BrowserUpdates.swift")
+        self.assertIn("github.com/MNaqq/moezilla/releases", updater)
+        self.assertNotIn("github.com/minh-ton/reynard-browser/releases", updater)
+
+    def test_official_signed_ublock_installed_by_addon_runtime(self):
+        import zipfile
+        package = ROOT / "browser/Reynard/Resources/BuiltInAddons/uBlockOrigin.xpi"
+        self.assertTrue(package.is_file(), "Missing signed uBlock Origin XPI")
+        with zipfile.ZipFile(package) as archive:
+            import json
+            manifest = json.loads(archive.read("manifest.json"))
+        self.assertEqual(manifest["browser_specific_settings"]["gecko"]["id"],
+                         "uBlock0@raymondhill.net")
+        bootstrap = self.source("browser/Reynard/Client/Interface/Addons/BuiltInAdBlocking.swift")
+        coordinator = self.source("browser/Reynard/Client/Interface/Addons/AddonCoordinator.swift")
+        self.assertIn("await BuiltInAdBlocking.ensureInstalled()", coordinator)
+        self.assertIn("BuiltInAdBlocking.approval(for: prompt)", coordinator)
+        self.assertIn("installMethod: .manager", bootstrap)
+        self.assertIn("runtime.list().contains", bootstrap)
+
+    def test_gecko_helper_bundle_name_matches_signed_extension(self):
+        patch = self.source("patches/ipc/glue/NSExtensionUtils.mm.patch")
+        project = self.source("browser/Reynard.xcodeproj/project.pbxproj")
+        self.assertIn('@"Moezilla Helper.appex"', patch)
+        self.assertNotIn('@"Reynard Helper.appex"', patch)
+        self.assertIn('Moezilla Helper.appex', project)
+
+    def test_gecko_patch_applies_as_valid_new_file(self):
+        patch = ROOT / "patches/widget/uikit/GeckoEditableSupport.mm.patch"
+        with tempfile.TemporaryDirectory() as temp:
+            check = subprocess.run(
+                ["git", "apply", "--check", str(patch)], cwd=temp,
+                capture_output=True, text=True,
+            )
+        self.assertEqual(check.returncode, 0, check.stderr)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

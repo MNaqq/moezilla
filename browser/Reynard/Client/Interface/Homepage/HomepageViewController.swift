@@ -113,6 +113,7 @@ final class HomepageViewController: UINavigationController {
         loadViewIfNeeded()
         if resetNavigation {
             popToRootViewController(animated: false)
+            rootViewController.resetHomepageScrollToTop()
         }
         view.setNeedsLayout()
         view.layoutIfNeeded()

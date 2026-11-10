@@ -178,7 +178,7 @@ final class JITSettingsSection: NSObject {
         sender.isEnabled = false
         let alert = UIAlertController(
             title: NSLocalizedString("Preparing JIT", comment: ""),
-            message: NSLocalizedString("Since this is your first time enabling JIT, Reynard needs to download and mount the Developer Disk Image. This is required for JIT to work properly.", comment: ""),
+            message: NSLocalizedString("Since this is your first time enabling JIT, Moezilla needs to download and mount the Developer Disk Image. This is required for JIT to work properly.", comment: ""),
             preferredStyle: .alert
         )
         let progressView = UIProgressView(progressViewStyle: .default)
@@ -300,7 +300,7 @@ final class JITSettingsSection: NSObject {
         warningLabel.textColor = .systemRed
         warningLabel.text = NSLocalizedString("JIT is not supported on the OS version you are using.", comment: "")
         if shouldUseTrollStore {
-            warningLabel.text = NSLocalizedString("Install the TrollStore version of Reynard to enable JIT automatically for improved performance and to ensure websites work properly.", comment: "")
+            warningLabel.text = NSLocalizedString("Install the TrollStore version of Moezilla to enable JIT automatically for improved performance and to ensure websites work properly.", comment: "")
         }
         return warningLabel
     }

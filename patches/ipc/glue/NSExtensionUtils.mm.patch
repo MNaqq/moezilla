@@ -1,6 +1,6 @@
 diff --git a/ipc/glue/NSExtensionUtils.mm b/ipc/glue/NSExtensionUtils.mm
 new file mode 100644
-index 000000000000..518377a5f5dd
+index 0000000000..6d83b0b9b6
 --- /dev/null
 +++ b/ipc/glue/NSExtensionUtils.mm
 @@ -0,0 +1,356 @@
@@ -106,7 +106,7 @@ index 000000000000..518377a5f5dd
 +  }
 +
 +  NSURL* extensionURL =
-+      [plugInsURL URLByAppendingPathComponent:@"Reynard Helper.appex"];
++      [plugInsURL URLByAppendingPathComponent:@"Moezilla Helper.appex"];
 +  return [[NSBundle bundleWithURL:extensionURL] bundleIdentifier];
 +}
 +

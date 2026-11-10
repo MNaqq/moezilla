@@ -74,6 +74,7 @@ final class AddonCoordinator: NSObject, AddonEmbedderDelegate {
     func start() async {
         AddonRuntime.shared.delegate = self
         _ = try? await AddonRuntime.shared.list()
+        await BuiltInAdBlocking.ensureInstalled()
         updateCoordinator.start()
         delegate?.refreshAddonChrome(self)
     }
@@ -227,6 +228,9 @@ final class AddonCoordinator: NSObject, AddonEmbedderDelegate {
     
     @MainActor
     func addonController(_ controller: AddonRuntime, promptFor prompt: AddonPermissionPrompt) async -> AddonPermissionPromptResponse {
+        if let response = BuiltInAdBlocking.approval(for: prompt) {
+            return response
+        }
         if let response = AddonImporter.installationResponse(for: prompt) {
             return response
         }

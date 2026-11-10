@@ -46,6 +46,7 @@ final class HomepageRootViewController: UIViewController {
     private var visibleContentInsets: UIEdgeInsets = .zero
     private var sectionViewControllers: [HomepageSection: UIViewController] = [:]
     private var sectionStackWidthConstraint: NSLayoutConstraint?
+    private var hasPositionedInitialScroll = false
     
     private let wallpaperImageView: UIImageView = {
         let imageView = UIImageView()
@@ -110,6 +111,15 @@ final class HomepageRootViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         updateSectionStackWidth()
+        // The embedded homepage can acquire its final safe area after the
+        // scroll view has already laid out its first section. On that first
+        // usable layout always start at the true top, not offset zero.
+        if !hasPositionedInitialScroll && scrollView.bounds.height > 0 {
+            hasPositionedInitialScroll = true
+            scrollView.setContentOffset(
+                CGPoint(x: 0, y: -scrollView.contentInset.top), animated: false
+            )
+        }
     }
     
     override func viewSafeAreaInsetsDidChange() {
@@ -180,8 +190,18 @@ final class HomepageRootViewController: UIViewController {
         updateScrollInsets()
     }
     
+    func resetHomepageScrollToTop() {
+        // A new blank tab should not inherit a previous tab's scrolled home.
+        hasPositionedInitialScroll = false
+        guard isViewLoaded else { return }
+        scrollView.setContentOffset(
+            CGPoint(x: 0, y: -scrollView.contentInset.top), animated: false
+        )
+    }
+
     private func updateScrollInsets() {
-        let isAtTop = scrollView.contentOffset.y <= -scrollView.contentInset.top
+        let isAtTop = !hasPositionedInitialScroll
+            || scrollView.contentOffset.y <= -scrollView.contentInset.top + 2
         let effectiveVisibleContentInsets = contentMode.isDetached ? .zero : visibleContentInsets
         let topInset = folder == nil
         ? effectiveVisibleContentInsets.top + UX.topInset

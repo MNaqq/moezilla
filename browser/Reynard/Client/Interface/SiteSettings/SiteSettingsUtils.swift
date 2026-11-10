@@ -60,10 +60,10 @@ enum SiteSettingsUtils {
         let permissionList = formattedPermissionList(names)
         
         if names.count == 1 {
-            return String(format: NSLocalizedString("%@ is disabled for Reynard. Open Settings to allow access.", comment: "Permission list placeholder"), permissionList)
+            return String(format: NSLocalizedString("%@ is disabled for Moezilla. Open Settings to allow access.", comment: "Permission list placeholder"), permissionList)
         }
         
-        return String(format: NSLocalizedString("%@ are disabled for Reynard. Open Settings to allow access.", comment: "Permission list placeholder"), permissionList)
+        return String(format: NSLocalizedString("%@ are disabled for Moezilla. Open Settings to allow access.", comment: "Permission list placeholder"), permissionList)
     }
     
     // MARK: - Permission Actions
