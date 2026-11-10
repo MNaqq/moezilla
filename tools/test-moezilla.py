@@ -46,10 +46,19 @@ class MoezillaConfigurationTests(unittest.TestCase):
     def test_background_task_registration_contract(self):
         code = self.source("browser/Reynard/BackgroundDebuggingSession.swift")
         ids = self.info["BGTaskSchedulerPermittedIdentifiers"]
-        self.assertEqual(ids, ["com.bonewizardry.Moezilla.backgroundDebugging"])
-        self.assertIn(ids[0], code)
+        self.assertEqual(ids, ["com.bonewizardry.Moezilla.backgroundDebugging.*"])
+        # iOS 26 continued-processing tasks require a permitted wildcard prefix
+        # and a concrete task identifier with a suffix when registering.
+        self.assertIn(
+            'private static let taskIdentifier = "com.bonewizardry.Moezilla.backgroundDebugging.session"',
+            code,
+        )
+        self.assertTrue(
+            "com.bonewizardry.Moezilla.backgroundDebugging.session".startswith(ids[0][:-1])
+        )
         self.assertIn("processing", self.info["UIBackgroundModes"])
         self.assertIn("BGContinuedProcessingTaskRequest", code)
+        self.assertIn("if !registrationSucceeded {\n            register()\n        }", code)
 
     def test_explicit_start_and_stop_controls(self):
         ui = self.source(
@@ -73,6 +82,24 @@ class MoezillaConfigurationTests(unittest.TestCase):
         scene = self.source("browser/Reynard/SceneDelegate.swift")
         self.assertIn("guard !BackgroundDebuggingSession.shared.isRunning", scene)
         self.assertIn("restoreRemoteDebuggingOnForeground()", scene)
+
+    def test_homepage_starts_at_visible_top_after_layout(self):
+        root = self.source("browser/Reynard/Client/Interface/Homepage/HomepageRootViewController.swift")
+        wrapper = self.source("browser/Reynard/Client/Interface/Homepage/HomepageViewController.swift")
+        self.assertIn("hasPositionedInitialScroll", root)
+        self.assertIn("scrollView.bounds.height > 0", root)
+        self.assertIn("y: -scrollView.contentInset.top", root)
+        self.assertIn("rootViewController.resetHomepageScrollToTop()", wrapper)
+
+    def test_toolbar_icons_remain_visible_after_suggestion_scroll(self):
+        chrome = self.source("browser/Reynard/Client/Interface/Chrome/BrowserChrome.swift")
+        self.assertIn("hidesButtons: false", chrome)
+        self.assertNotIn("hidesButtons: state.search == .scrollingEmbeddedSuggestions", chrome)
+
+    def test_incremental_gecko_copy_resigns_app_if_seal_changed(self):
+        installer = self.source("tools/development/install-moezilla-device.sh")
+        self.assertIn("--preserve-metadata=entitlements,requirements,flags", installer)
+        self.assertIn("codesign --verify --deep --strict", installer)
 
     def test_address_bar_accessibility_identifier(self):
         source = self.source("browser/Reynard/Client/Interface/Chrome/AddressBar/AddressBar.swift")
@@ -111,6 +138,13 @@ class MoezillaConfigurationTests(unittest.TestCase):
         updater = self.source("browser/Reynard/Client/Startup/BrowserUpdates.swift")
         self.assertIn("github.com/MNaqq/moezilla/releases", updater)
         self.assertNotIn("github.com/minh-ton/reynard-browser/releases", updater)
+
+    def test_gecko_helper_bundle_name_matches_signed_extension(self):
+        patch = self.source("patches/ipc/glue/NSExtensionUtils.mm.patch")
+        project = self.source("browser/Reynard.xcodeproj/project.pbxproj")
+        self.assertIn('@"Moezilla Helper.appex"', patch)
+        self.assertNotIn('@"Reynard Helper.appex"', patch)
+        self.assertIn('Moezilla Helper.appex', project)
 
     def test_gecko_patch_applies_as_valid_new_file(self):
         patch = ROOT / "patches/widget/uikit/GeckoEditableSupport.mm.patch"

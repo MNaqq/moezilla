@@ -12,7 +12,7 @@ import BackgroundTasks
 final class BackgroundDebuggingSession {
     static let shared = BackgroundDebuggingSession()
 
-    private static let taskIdentifier = "com.bonewizardry.Moezilla.backgroundDebugging"
+    private static let taskIdentifier = "com.bonewizardry.Moezilla.backgroundDebugging.session"
     private static let recoveryPreference = "Moezilla.RemoteDebugging.RestoreOnForeground"
 
     private var shouldRestoreSession: Bool {
@@ -54,6 +54,7 @@ final class BackgroundDebuggingSession {
             ) { [weak self] task in
                 self?.handle(task)
             }
+            NSLog("Moezilla BG continued-processing registration: %@ (delegate=%@)", registrationSucceeded.description, String(describing: UIApplication.shared.delegate))
         } else {
             registrationSucceeded = true
         }
@@ -65,6 +66,12 @@ final class BackgroundDebuggingSession {
             throw SessionError.remoteDebuggingDisabled
         }
         guard !isRunning else { return }
+        // Continued-processing handlers may be registered on demand on iOS 26.
+        // Register from the explicit foreground action if Gecko's custom
+        // UIApplication startup has not invoked the normal delegate hook.
+        if !registrationSucceeded {
+            register()
+        }
         guard registrationSucceeded else {
             throw SessionError.registrationFailed
         }

@@ -829,6 +829,14 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
             name: UIResponder.keyboardWillChangeFrameNotification,
             object: nil
         )
+        // Re-evaluate once UIKit finishes bringing up the keyboard. The
+        // address field may become first responder after the will-change event.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardFrameWillChange(_:)),
+            name: UIResponder.keyboardDidShowNotification,
+            object: nil
+        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillHide(_:)),
@@ -1000,10 +1008,11 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         let sitsFlushWithBottom = keyboardFrame.maxY >= view.bounds.maxY - 8
         let isFloatingKeyboard = browserLayout.interfaceIdiom == .pad
         && !(spansWindow && sitsFlushWithBottom)
+        let hasVisibleSoftwareKeyboard = spansWindow && sitsFlushWithBottom && keyboardInset > 100
         let shouldAdjustForKeyboard = keyboardInset > 0
         && !isFloatingKeyboard
         && !tabOverview.isPresented
-        && !isHardwareKeyboardMode
+        && (!isHardwareKeyboardMode || hasVisibleSoftwareKeyboard)
         
         let presentedController = presentedControllerInHierarchy
         let shouldRelocateInput = shouldAdjustForKeyboard

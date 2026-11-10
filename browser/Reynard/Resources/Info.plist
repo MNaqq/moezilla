@@ -72,7 +72,7 @@
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.bonewizardry.Moezilla.backgroundDebugging</string>
+		<string>com.bonewizardry.Moezilla.backgroundDebugging.*</string>
 	</array>
 </dict>
 </plist>

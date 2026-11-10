@@ -42,7 +42,22 @@ if [[ "${ACTUAL_BUNDLE_ID}" != "${EXPECTED_BUNDLE_ID}" ]]; then
     exit 1
 fi
 
-/usr/bin/codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
+# Xcode's `Copy Gecko Stuff` phase can refresh the signed Gecko frameworks
+# during an incremental build *after* the enclosing app's resource seal was
+# written. Re-seal only the outer app with the identity Xcode selected.
+if ! /usr/bin/codesign --verify --deep --strict --verbose=2 "${APP_PATH}"; then
+    SIGNER=$(/usr/bin/codesign --display --verbose=3 "${APP_PATH}" 2>&1 \
+        | /usr/bin/sed -n 's/^Authority=\(Apple Development:.*\)$/\1/p' \
+        | /usr/bin/head -n 1)
+    if [[ -z "${SIGNER}" ]]; then
+        echo "Could not determine the Xcode development signing identity" >&2
+        exit 1
+    fi
+    echo "Refreshing outer app resource seal after Gecko framework copying..."
+    /usr/bin/codesign --force --sign "${SIGNER}" \
+        --preserve-metadata=entitlements,requirements,flags "${APP_PATH}"
+    /usr/bin/codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
+fi
 
 echo "Installing ${EXPECTED_BUNDLE_ID} on paired iPhone..."
 /usr/bin/xcrun devicectl device install app \
