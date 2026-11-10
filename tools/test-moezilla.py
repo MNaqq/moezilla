@@ -139,6 +139,22 @@ class MoezillaConfigurationTests(unittest.TestCase):
         self.assertIn("github.com/MNaqq/moezilla/releases", updater)
         self.assertNotIn("github.com/minh-ton/reynard-browser/releases", updater)
 
+    def test_official_signed_ublock_installed_by_addon_runtime(self):
+        import zipfile
+        package = ROOT / "browser/Reynard/Resources/BuiltInAddons/uBlockOrigin.xpi"
+        self.assertTrue(package.is_file(), "Missing signed uBlock Origin XPI")
+        with zipfile.ZipFile(package) as archive:
+            import json
+            manifest = json.loads(archive.read("manifest.json"))
+        self.assertEqual(manifest["browser_specific_settings"]["gecko"]["id"],
+                         "uBlock0@raymondhill.net")
+        bootstrap = self.source("browser/Reynard/Client/Interface/Addons/BuiltInAdBlocking.swift")
+        coordinator = self.source("browser/Reynard/Client/Interface/Addons/AddonCoordinator.swift")
+        self.assertIn("await BuiltInAdBlocking.ensureInstalled()", coordinator)
+        self.assertIn("BuiltInAdBlocking.approval(for: prompt)", coordinator)
+        self.assertIn("installMethod: .manager", bootstrap)
+        self.assertIn("runtime.list().contains", bootstrap)
+
     def test_gecko_helper_bundle_name_matches_signed_extension(self):
         patch = self.source("patches/ipc/glue/NSExtensionUtils.mm.patch")
         project = self.source("browser/Reynard.xcodeproj/project.pbxproj")
